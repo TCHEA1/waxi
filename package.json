@@ -1,0 +1,20 @@
+{
+  "name": "waxi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Waxi - puzzle de blocs aux motifs wax",
+  "scripts": {
+    "fonts": "node scripts/copy-fonts.js",
+    "sync": "npm run fonts && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "7.2.0",
+    "@capacitor/android": "7.6.9",
+    "@capacitor/core": "7.6.9"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.9",
+    "@fontsource/baloo-2": "5.3.0",
+    "@fontsource/bungee": "5.3.0"
+  }
+}

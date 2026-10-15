@@ -1,0 +1,10 @@
+{
+  "appId": "com.marestchea.waxi",
+  "appName": "Waxi",
+  "webDir": "www",
+  "backgroundColor": "#12153a",
+  "android": {
+    "backgroundColor": "#12153a",
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
+}
