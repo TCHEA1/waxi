@@ -162,6 +162,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
         <div class="chip"><span>Score</span><b id="score">0</b></div>
         <div class="chip best"><span>Record</span><b id="best">0</b></div>
       </div>
+      <button class="menuBtn" id="sndBtn" type="button" aria-label="Couper le son">🔊</button>
       <button class="menuBtn" id="menuBtn" type="button">Menu</button>
     </div>
   </header>
@@ -256,6 +257,91 @@ const ADS = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
+
+  // ---------- sons (balafon + djembé, fabriqués dans le code, sans fichier)
+  const SFX = (() => {
+    let ctx = null, master = null;
+    let on = store.get('waxiSon') !== '0';
+    const PENTA = [392, 440, 523.25, 587.33, 659.25, 784, 880, 1046.5, 1174.66, 1318.5, 1568];
+    function ac() {
+      if (!ctx) {
+        try {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          master = ctx.createGain(); master.gain.value = 0.7;
+          const comp = ctx.createDynamicsCompressor();
+          master.connect(comp); comp.connect(ctx.destination);
+        } catch (e) { ctx = null; }
+      }
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    // note de balafon : son principal + harmonique aiguë qui s'éteint vite
+    function bala(freq, when, vol = 0.35, dur = 0.5) {
+      const c = ac(); if (!c || !on) return;
+      const t = c.currentTime + when;
+      [[1, vol, dur], [3.9, vol * 0.35, dur * 0.25]].forEach(([mul, v, d]) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = freq * mul;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(v, t + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + d + 0.05);
+      });
+    }
+    let noiseBuf = null;
+    function noise(when, dur, vol, freq, type = 'lowpass') {
+      const c = ac(); if (!c || !on) return;
+      if (!noiseBuf) {
+        noiseBuf = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      const t = c.currentTime + when;
+      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = noiseBuf; f.type = type; f.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur + 0.02);
+    }
+    // frappe de djembé : note grave qui descend + petit bruit de peau
+    function djembe(when, f0 = 170, vol = 0.6) {
+      const c = ac(); if (!c || !on) return;
+      const t = c.currentTime + when;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.55, t + 0.14);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.25);
+      noise(when, 0.05, vol * 0.25, 2500);
+    }
+    return {
+      unlock: ac,
+      isOn: () => on,
+      toggle() { on = !on; store.set('waxiSon', on ? '1' : '0'); if (on) bala(784, 0, 0.25, 0.3); return on; },
+      pick() { bala(1174.66, 0, 0.12, 0.12); },
+      place(size) { djembe(0, size >= 5 ? 130 : 170, 0.55); bala(PENTA[Math.min(size, 6)], 0.01, 0.16, 0.25); },
+      back() { bala(330, 0, 0.12, 0.15); },
+      clear(lines, streak) {
+        const n = Math.min(3 + lines * 2, 9), start = Math.min(streak - 1, 3);
+        for (let k = 0; k < n; k++) bala(PENTA[Math.min(start + k, PENTA.length - 1)], k * 0.06, 0.3, 0.45);
+        noise(0, 0.25, 0.2, 6000, 'highpass');           // chachacha (shaker)
+        noise(0.12, 0.2, 0.12, 6000, 'highpass');
+        if (lines >= 2) { djembe(0, 120, 0.7); djembe(0.18, 200, 0.5); djembe(0.3, 200, 0.5); }
+      },
+      turn() { bala(659.25, 0, 0.14, 0.2); bala(880, 0.08, 0.14, 0.25); },
+      over() { [659.25, 587.33, 523.25, 392].forEach((f, k) => bala(f, k * 0.16, 0.28, 0.6)); djembe(0.66, 110, 0.6); },
+      record() {
+        [523.25, 659.25, 784, 1046.5].forEach((f, k) => bala(f, k * 0.1, 0.3, 0.5));
+        [784, 1046.5].forEach((f, k) => bala(f, 0.45 + k * 0.02, 0.28, 0.9));
+        djembe(0, 150, 0.6); djembe(0.2, 200, 0.5); djembe(0.4, 150, 0.6);
+        noise(0.4, 0.4, 0.15, 6000, 'highpass');
+      },
+      reward() { [784, 880, 1046.5, 1318.5, 1568].forEach((f, k) => bala(f, k * 0.05, 0.2, 0.35)); },
+      tap() { bala(880, 0, 0.1, 0.08); }
+    };
+  })();
+  // Android n'autorise le son qu'après un premier toucher de l'écran
+  window.addEventListener('pointerdown', () => SFX.unlock(), { once: false, passive: true });
 
   // ---------- publicités AdMob
   const Cap = window.Capacitor;
@@ -420,6 +506,9 @@ const ADS = {
     if (!L || L.seq <= seenSeq) return false;
     seenSeq = L.seq;
     L.placed.forEach(idx => cells[idx].classList.add('fresh'));
+    SFX.place(L.placed.length);
+    if (L.lines) setTimeout(() => SFX.clear(L.lines, L.streak || 1), 90);
+    else if (isMulti() && G.status === 'play') setTimeout(() => SFX.turn(), 250);
     if (L.cleared.length) {
       L.cleared.forEach(([idx, col]) => { cells[idx].className = 'cell p' + col + ' clear'; });
       setTimeout(drawBoard, 330);
@@ -446,6 +535,7 @@ const ADS = {
     if (!G || G.status !== 'over') return;
     if (!isMulti()) {
       const s = G.scores[0];
+      if (s > best && s > 0) { SFX.record(); toast('Nouveau record !'); } else SFX.over();
       if (s > best) { best = s; store.set('blocWaxBest', best); }
       $('os').textContent = s; $('ob').textContent = best;
       $('bCont').hidden = !!G.usedAd;
@@ -464,6 +554,7 @@ const ADS = {
       const b = document.createElement('b'); b.textContent = G.scores[i];
       li.append(n, b); ul.appendChild(li);
     });
+    SFX.record();
     show('overMulti');
   }
 
@@ -512,6 +603,7 @@ const ADS = {
     }
     document.body.appendChild(gh);
     slot.style.visibility = 'hidden';
+    SFX.pick();
     const w = p.w * g.step, h = p.h * g.step;
     const lift = e.pointerType === 'mouse' ? h / 2 : h + 36;
     drag = { i, p, gh, g, w, h, lift, slot, target: null };
@@ -535,6 +627,7 @@ const ADS = {
     const d = drag; drag = null;
     d.gh.remove(); d.slot.style.visibility = ''; clearPreview();
     if (d.target && G.status === 'play' && G.tray[d.i] === d.p) onState(apply(G, d.i, d.target[0], d.target[1]));
+    else SFX.back();
   };
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
@@ -551,6 +644,12 @@ const ADS = {
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('home')));
   document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => { maybeInterstitial(); show('home'); }));
   $('menuBtn').addEventListener('click', () => show('home'));
+  const sndBtn = $('sndBtn');
+  const showSnd = () => { sndBtn.textContent = SFX.isOn() ? '🔊' : '🔇'; sndBtn.setAttribute('aria-label', SFX.isOn() ? 'Couper le son' : 'Activer le son'); };
+  showSnd();
+  sndBtn.addEventListener('click', () => { SFX.toggle(); showSnd(); });
+  // petit clic sur tous les boutons des menus
+  document.addEventListener('click', e => { const b = e.target.closest('.btn, .seg button, #menuBtn'); if (b) SFX.tap(); });
   $('bAgain').addEventListener('click', () => { maybeInterstitial(); startSolo(); });
   $('bRematch').addEventListener('click', () => {
     maybeInterstitial();
@@ -563,6 +662,7 @@ const ADS = {
     showRewarded(() => {
       const g = JSON.parse(JSON.stringify(G));
       g.usedAd = true; g.status = 'play';
+      SFX.reward();
       g.tray = [0, 1, 2].map(() => {
         const opt = SMALL.map(mk).filter(p => anyFit(g.board, p));
         return opt.length ? opt[Math.floor(Math.random() * opt.length)] : mk(SMALL[0]);
