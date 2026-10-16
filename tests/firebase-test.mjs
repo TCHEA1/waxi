@@ -10,7 +10,7 @@ const cfg = {
   projectId: 'waxi-58c6c',
   appId: '1:202581818055:web:5201c24ad1565002105ce2'
 };
-const step = async (name, fn) => { try { const r = await fn(); console.log('OK  ', name, r ?? ''); return r; } catch (e) { console.log('ECHEC', name, '→', e.code || '', e.message); process.exitCode = 1; throw e; } };
+const step = async (name, fn) => { try { const r = await fn(); console.log('OK  ', name, r ?? ''); console.log('::notice::OK ' + name + ' ' + (r ?? '')); return r; } catch (e) { console.log('ECHEC', name, '→', e.code || '', e.message); console.log('::error::ECHEC ' + name + ' ' + (e.code || '') + ' ' + e.message); process.exitCode = 1; throw e; } };
 const code = 'TST' + Math.floor(Math.random() * 10);
 try {
   const a1 = initializeApp(cfg, 'j1'), a2 = initializeApp(cfg, 'j2');
