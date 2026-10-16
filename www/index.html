@@ -394,6 +394,7 @@ const ADS = {
       moveFailed: 'Coup non envoyé', gameClosed: 'Partie fermée', waitRematch: "L'hôte peut lancer la revanche.",
       chat: 'Discuter', chatTitle: 'Discussion', close: 'Fermer', chatPh: 'Écris un message…', send: 'Envoyer',
       chatEmpty: "Les messages des joueurs s'affichent ici.", offline: 'Pas de connexion', msgFailed: 'Message non envoyé',
+      skipped: '{n} était absent : tour passé', secs: ' ({s} s)',
       taunts: ['Tu es lent !', 'Wouyaye !', 'Doucement !', "C'est gâté pour toi !", 'Je suis trop fort !', 'Bien joué !']
     },
     en: {
@@ -430,6 +431,7 @@ const ADS = {
       moveFailed: 'Move not sent', gameClosed: 'Game closed', waitRematch: 'The host can start a rematch.',
       chat: 'Chat', chatTitle: 'Chat', close: 'Close', chatPh: 'Type a message…', send: 'Send',
       chatEmpty: "Players' messages show up here.", offline: 'No connection', msgFailed: 'Message not sent',
+      skipped: '{n} was away: turn skipped', secs: ' ({s}s)',
       taunts: ['Too slow!', 'Wouyaye!', 'Easy now!', "You're done for!", "I'm too good!", 'Nice move!']
     }
   };
@@ -701,10 +703,7 @@ const ADS = {
     const h = $('hint'); h.classList.remove('turn');
     if (!multi) h.textContent = t('hintSolo');
     else if (G.status !== 'play') h.textContent = '';
-    else if (mode === 'remote') {
-      if (myTurn()) { h.textContent = t('yourTurnHint'); h.classList.add('turn'); }
-      else h.textContent = t('turnWait', { n: nameOf(G.cur) });
-    }
+    else if (mode === 'remote') remoteHint();
     else { h.textContent = t('turnOf', { n: nameOf(G.cur) }); h.classList.add('turn'); }
     $('footrow').hidden = mode !== 'remote';
     if (mode !== 'remote' && !$('sheet').hidden) closeSheet();
@@ -713,6 +712,7 @@ const ADS = {
     const L = G.last;
     if (!L || L.seq <= seenSeq) return false;
     seenSeq = L.seq;
+    if (L.skipped) { toast(t('skipped', { n: nameOf(L.by) })); SFX.turn(); return true; }
     L.placed.forEach(idx => cells[idx].classList.add('fresh'));
     SFX.place(L.placed.length);
     if (L.lines) setTimeout(() => SFX.clear(L.lines, L.streak || 1), 90);
@@ -871,7 +871,7 @@ const ADS = {
     d.gh.remove(); d.slot.style.visibility = ''; clearPreview();
     if (d.target && G.status === 'play' && G.tray[d.i] === d.p && myTurn()) {
       const ng = apply(G, d.i, d.target[0], d.target[1]);
-      if (mode === 'remote') remoteCommit(G, ng);
+      if (mode === 'remote') { if (ng.players[G.cur]) ng.players[G.cur].miss = 0; remoteCommit(G, ng); }
       else { prevG = isMulti() ? null : JSON.parse(JSON.stringify(G)); onState(ng); }
     }
     else SFX.back();
@@ -960,6 +960,41 @@ const ADS = {
   // ================= JEU À DISTANCE (Firebase) =================
   let fbReady = null, db = null, gameRef = null, chatQuery = null, stateCb = null, chatCb = null;
   let unread = 0, chatLoaded = false;
+  // ----- tour passé automatiquement si un joueur est absent
+  let srvOffset = 0, skipping = false;
+  const serverNow = () => Date.now() + srvOffset;
+  const TURN_MS = 60000, TURN_MS_AWAY = 15000;
+  const turnLimit = g => ((g.players[g.cur] && g.players[g.cur].miss) || 0) >= 2 ? TURN_MS_AWAY : TURN_MS;
+  const turnLeft = () => turnLimit(G) - (serverNow() - (G.turnAt || serverNow()));
+  function remoteHint() {
+    const h = $('hint');
+    const left = Math.ceil(turnLeft() / 1000);
+    const sfx = left <= 20 && isMulti() ? t('secs', { s: Math.max(0, left) }) : '';
+    if (myTurn()) { h.textContent = t('yourTurnHint') + sfx; h.classList.add('turn'); }
+    else { h.textContent = t('turnWait', { n: nameOf(G.cur) }) + sfx; h.classList.remove('turn'); }
+  }
+  function skipTurn() {
+    if (skipping || !gameRef) return;
+    skipping = true;
+    const seen = { seq: G.seq, cur: G.cur };
+    gameRef.child('s').transaction(cur => {
+      if (cur === null) return null;
+      const c = JSON.parse(cur);
+      if (c.status !== 'play' || c.seq !== seen.seq || c.cur !== seen.cur) return;
+      if (serverNow() - (c.turnAt || 0) < turnLimit(c) - 1500) return;
+      const p = c.players[c.cur]; p.miss = (p.miss || 0) + 1;
+      c.seq++; c.streak = 0;
+      c.last = { seq: c.seq, by: c.cur, skipped: true, placed: [], cleared: [], lines: 0, gain: 0 };
+      c.cur = (c.cur + 1) % c.players.length;
+      c.turnAt = serverNow();
+      return JSON.stringify(c);
+    }).catch(() => {}).then(() => { skipping = false; });
+  }
+  setInterval(() => {
+    if (mode !== 'remote' || !G || G.status !== 'play' || !isMulti()) return;
+    remoteHint();
+    if (!myTurn() && turnLeft() <= 0) skipTurn();
+  }, 1000);
   function rerr(msg) { const e = $('rerr'); e.textContent = msg || ''; e.hidden = !msg; }
   const pseudo = () => $('pseudo').value.trim().slice(0, 14);
   function initFb() {
@@ -969,6 +1004,7 @@ const ADS = {
       try {
         if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         db = firebase.database();
+        db.ref('.info/serverTimeOffset').on('value', sn => { srvOffset = sn.val() || 0; });
         const auth = firebase.auth();
         const timer = setTimeout(() => reject({ code: 'timeout' }), 15000);
         const done = u => { clearTimeout(timer); myId = u.uid; resolve(u.uid); };
@@ -1082,6 +1118,7 @@ const ADS = {
 
   function remoteCommit(prev, next) {
     if (!gameRef) return;
+    next.turnAt = serverNow();
     onState(next);
     gameRef.child('s').transaction(cur => {
       if (cur === null) return null;
