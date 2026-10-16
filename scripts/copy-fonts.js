@@ -11,3 +11,11 @@ const files = [
 ];
 for (const [src, dst] of files) fs.copyFileSync(require.resolve(src), path.join(out, dst));
 console.log('Polices copiées');
+
+// Bibliothèques Firebase (jeu à distance), copiées pour marcher sans CDN
+const lib = path.join(__dirname, '..', 'www', 'lib');
+fs.mkdirSync(lib, { recursive: true });
+const fbDir = path.join(__dirname, '..', 'node_modules', 'firebase');
+for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-database-compat.js'])
+  fs.copyFileSync(path.join(fbDir, f), path.join(lib, f));
+console.log('Firebase copié');

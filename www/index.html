@@ -157,7 +157,34 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .plist li.win { border-color: var(--or); }
 .ad .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #ff7a1a; font-weight: 800; }
 .ad .count { font-family: var(--display); font-size: 64px; color: #ff7a1a; line-height: 1; }
-@media (prefers-reduced-motion: reduce) { .cell.clear, .cell.fresh, .toast { animation-duration: .01s; } .pchip { transition: none; } }
+.tray.locked .mini { opacity: .45; }
+.card .err { color: var(--orange); font-weight: 700; font-size: 14px; margin: 0; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1 1 0; min-width: 0; }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.sep::before, .sep::after { content: ""; flex: 1; height: 2px; background: var(--line); }
+.field.code { text-transform: uppercase; letter-spacing: .3em; font-family: var(--display); font-weight: 400; text-align: center; }
+.bigcode { font-family: var(--display); font-size: 46px; letter-spacing: .12em; color: var(--or); line-height: 1; -webkit-user-select: text; user-select: text; }
+.plist li .tag { color: var(--muted); font-size: 12px; font-weight: 700; }
+.btn.wa { background: #25d366; color: #0b3d1f; box-shadow: 0 5px 0 #138a43; font-size: 15px; }
+.footrow { display: flex; gap: 6px; align-items: center; min-width: 0; flex: 0 0 auto; }
+.reacts { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; flex: 1 1 auto; min-width: 0; touch-action: pan-x; }
+.reacts button { flex: 0 0 auto; font-family: var(--body); font-weight: 800; font-size: 13px; border: 2px solid var(--line); background: var(--indigo); color: var(--craie); border-radius: 20px; padding: 4px 10px; }
+.chatBtn { flex: 0 0 auto; position: relative; font-family: var(--body); font-weight: 800; font-size: 14px; border: 2px solid var(--or); background: var(--or); color: var(--indigo-deep); border-radius: 20px; padding: 4px 12px; }
+.badge { position: absolute; top: -8px; right: -6px; background: #d8342c; color: var(--craie); font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; text-align: center; padding: 0 4px; box-sizing: border-box; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; max-width: 460px; margin: 0 auto; box-sizing: border-box; background: var(--indigo); border: 3px solid var(--or); border-bottom: 0; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; gap: 8px; padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); box-shadow: 0 -8px 24px rgba(0,0,0,.45); touch-action: pan-y; }
+.sheetHead { display: flex; justify-content: space-between; align-items: center; font-family: var(--display); color: var(--or); }
+.sheetHead b { font-weight: 400; font-size: 18px; }
+.log { display: flex; flex-direction: column; gap: 3px; font-size: 15px; line-height: 1.35; height: 9.5em; overflow-y: auto; overflow-x: hidden; background: rgba(38,43,99,.35); border-radius: 8px; padding: 4px 8px; -webkit-user-select: text; user-select: text; }
+.log:empty::before { content: attr(data-empty); color: #6f74a8; }
+.log div { overflow-wrap: anywhere; }
+.log b { font-weight: 800; }
+.chatrow { display: flex; gap: 6px; }
+.chatrow .field { flex: 1 1 auto; min-width: 0; font-size: 15px; padding: 8px 10px; }
+.btn.send { font-size: 14px; padding: 8px 12px; box-shadow: 0 3px 0 #a87c0c; }
+.bubble { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); background: var(--craie); color: var(--indigo-deep); font-weight: 800; font-size: 16px; padding: 6px 14px; border-radius: 16px; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; z-index: 11; pointer-events: none; animation: bub 2.4s ease-out forwards; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+@keyframes bub { 0% { opacity: 0; transform: translate(-50%, -8px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cell.clear, .cell.fresh, .toast, .bubble { animation-duration: .01s; } .pchip { transition: none; } }
 </style>
 </head>
 <body>
@@ -184,6 +211,19 @@ header { display: flex; justify-content: space-between; align-items: center; gap
     <button class="pw" id="pSwap" type="button"><span class="play">▶</span><span data-i18n="swap">Nouvelles pièces</span><small id="cSwap">3</small></button>
   </div>
   <p class="hint" id="hint"></p>
+  <div class="footrow" id="footrow" hidden>
+    <button class="chatBtn" id="chatBtn" type="button"><span data-i18n="chat">Discuter</span> <span class="badge" id="badge" hidden>0</span></button>
+    <div class="reacts" id="reacts"></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheetHead"><b data-i18n="chatTitle">Discussion</b><button class="menuBtn" id="sheetClose" type="button" data-i18n="close">Fermer</button></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <form class="chatrow" id="chatForm">
+    <input class="field" id="chatIn" maxlength="120" data-i18n-placeholder="chatPh" autocomplete="off">
+    <button class="btn send" type="submit" data-i18n="send">Envoyer</button>
+  </form>
 </div>
 
 <div class="panel" id="home">
@@ -192,7 +232,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
     <p data-i18n="tagline">Place les pièces wax, vide les lignes et les colonnes, bats le record.</p>
     <button class="btn" id="bSolo" type="button" data-i18n="playSolo">Jouer seul</button>
     <button class="btn alt" id="bLocal" type="button"><span data-i18n="playMulti">À plusieurs</span><span class="btnsub" data-i18n="multiSub">2 ou 3 joueurs sur ce téléphone</span></button>
-    <p class="dim" data-i18n="soon">Bientôt : jouer à distance avec tes amis.</p>
+    <button class="btn alt" id="bRemote" type="button"><span data-i18n="remote">À distance</span><span class="btnsub" data-i18n="remoteSub">Chacun sur son téléphone, 2 ou 3 joueurs</span></button>
     <div class="seg lang" role="group" aria-label="Langue / Language">
       <button type="button" id="lgFR" aria-pressed="true">Français</button>
       <button type="button" id="lgEN" aria-pressed="false">English</button>
@@ -216,6 +256,34 @@ header { display: flex; justify-content: space-between; align-items: center; gap
   </div>
 </div>
 
+<div class="panel" id="remoteSet" hidden>
+  <div class="card">
+    <h2 data-i18n="remote">À distance</h2>
+    <input class="field" id="pseudo" maxlength="14" data-i18n-placeholder="pseudoPh" autocomplete="off">
+    <button class="btn" id="bCreate" type="button" data-i18n="create">Créer une partie</button>
+    <div class="sep" data-i18n="or">ou</div>
+    <div class="row">
+      <input class="field code" id="codeIn" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+      <button class="btn alt" id="bJoin" type="button" data-i18n="join">Rejoindre</button>
+    </div>
+    <p class="err" id="rerr" hidden></p>
+    <button class="btn ghostbtn" data-back type="button" data-i18n="back">Retour</button>
+  </div>
+</div>
+
+<div class="panel" id="lobby" hidden>
+  <div class="card">
+    <p class="dim" data-i18n="gameCode">Code de la partie</p>
+    <div class="bigcode" id="lcode">----</div>
+    <button class="btn wa" id="bWa" type="button" data-i18n="inviteWa">Inviter sur WhatsApp</button>
+    <button class="btn ghostbtn" id="bCopy" type="button" data-i18n="copyCode">Copier le code</button>
+    <ul class="plist" id="lplayers"></ul>
+    <button class="btn" id="bStart" type="button" hidden></button>
+    <p class="dim" id="lwait"></p>
+    <button class="btn ghostbtn" id="bQuitLobby" type="button" data-i18n="quit">Quitter</button>
+  </div>
+</div>
+
 <div class="panel" id="overSolo" hidden>
   <div class="card">
     <h2 data-i18n="noRoom">Plus de place !</h2>
@@ -236,6 +304,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
     <p class="dim" id="msub"></p>
     <ul class="plist" id="mrank"></ul>
     <button class="btn" id="bRematch" type="button" data-i18n="rematch">Revanche</button>
+    <p class="dim" id="mwait" hidden data-i18n="waitRematch"></p>
     <button class="btn ghostbtn" data-home type="button" data-i18n="menu">Menu</button>
   </div>
 </div>
@@ -248,7 +317,22 @@ header { display: flex; justify-content: space-between; align-items: center; gap
   </div>
 </div>
 
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-database-compat.js"></script>
 <script>
+/* Projet Firebase de Waxi (jeu à distance). Ces codes ne sont pas secrets :
+   la sécurité vient des règles de la Realtime Database. */
+const FB_CONFIG = {
+  apiKey: "AIzaSyCRBrXJT-Fj88qCU_GrzXXH1PrlJ3lVAE8",
+  authDomain: "waxi-58c6c.firebaseapp.com",
+  databaseURL: "https://waxi-58c6c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "waxi-58c6c",
+  storageBucket: "waxi-58c6c.firebasestorage.app",
+  messagingSenderId: "202581818055",
+  appId: "1:202581818055:web:5201c24ad1565002105ce2"
+};
+
 /* =====================================================================
    PUBLICITÉS — À MODIFIER AVANT LA PUBLICATION SUR LE PLAY STORE
    Ce sont les identifiants de TEST de Google. Remplace-les par tes
@@ -294,7 +378,23 @@ const ADS = {
       undo: 'Annuler', swap: 'Nouvelles pièces', nothingUndo: 'Rien à annuler',
       noMore: 'Plus disponible pour cette partie', undone: 'Coup annulé', swapped: 'Nouvelles pièces !',
       doubled: 'Points doublés !', soundOff: 'Couper le son', soundOn: 'Activer le son',
-      cheers: ["C'est doux !", "Ça c'est zo !", 'Tu es fort !', 'Wouyaye !', 'Propre !']
+      cheers: ["C'est doux !", "Ça c'est zo !", 'Tu es fort !', 'Wouyaye !', 'Propre !'],
+      remote: 'À distance', remoteSub: 'Chacun sur son téléphone, 2 ou 3 joueurs', pseudoPh: 'Ton pseudo',
+      create: 'Créer une partie', or: 'ou', join: 'Rejoindre', gameCode: 'Code de la partie',
+      inviteWa: 'Inviter sur WhatsApp', copyCode: 'Copier le code', copied: 'Copié !',
+      start: 'Lancer la partie', startAlone: "Jouer seul pour l'instant", host: 'hôte', youTag: 'toi',
+      waitHost: 'En attente que {n} lance la partie…', hostHelp1: 'Envoie le code à tes amis, ou lance la partie seul.',
+      hostHelp2: 'Tout le monde est là ? Lance la partie !', quit: 'Quitter',
+      inviteMsg: 'On joue à Waxi ? Rejoins ma partie avec le code {c}',
+      connecting: 'Connexion…', errNick: "Écris d'abord ton pseudo.", errCodeLen: 'Le code a 4 caractères.',
+      errNoGame: 'Aucune partie avec ce code.', errStarted: 'Cette partie a déjà commencé.',
+      errFull: 'Cette partie est complète (3 joueurs).', errNet: 'Connexion impossible. Vérifie ton internet et réessaie.',
+      errSetup: "Le serveur du jeu n'est pas prêt ({c}).",
+      waitTurn: 'Attends ton tour', yourTurn: 'À toi !', yourTurnHint: 'À toi de jouer !', turnWait: 'Tour de {n}…',
+      moveFailed: 'Coup non envoyé', gameClosed: 'Partie fermée', waitRematch: "L'hôte peut lancer la revanche.",
+      chat: 'Discuter', chatTitle: 'Discussion', close: 'Fermer', chatPh: 'Écris un message…', send: 'Envoyer',
+      chatEmpty: "Les messages des joueurs s'affichent ici.", offline: 'Pas de connexion', msgFailed: 'Message non envoyé',
+      taunts: ['Tu es lent !', 'Wouyaye !', 'Doucement !', "C'est gâté pour toi !", 'Je suis trop fort !', 'Bien joué !']
     },
     en: {
       score: 'Score', record: 'Best', menu: 'Menu',
@@ -314,7 +414,23 @@ const ADS = {
       undo: 'Undo', swap: 'New pieces', nothingUndo: 'Nothing to undo',
       noMore: 'No more for this game', undone: 'Move undone', swapped: 'New pieces!',
       doubled: 'Points doubled!', soundOff: 'Mute sound', soundOn: 'Turn sound on',
-      cheers: ['Sweet!', 'Awesome!', 'On fire!', 'Wouyaye!', 'Clean!']
+      cheers: ['Sweet!', 'Awesome!', 'On fire!', 'Wouyaye!', 'Clean!'],
+      remote: 'Online', remoteSub: 'Each on their own phone, 2 or 3 players', pseudoPh: 'Your nickname',
+      create: 'Create a game', or: 'or', join: 'Join', gameCode: 'Game code',
+      inviteWa: 'Invite on WhatsApp', copyCode: 'Copy code', copied: 'Copied!',
+      start: 'Start the game', startAlone: 'Play alone for now', host: 'host', youTag: 'you',
+      waitHost: 'Waiting for {n} to start…', hostHelp1: 'Send the code to your friends, or start alone.',
+      hostHelp2: 'Everyone here? Start the game!', quit: 'Leave',
+      inviteMsg: "Let's play Waxi! Join my game with the code {c}",
+      connecting: 'Connecting…', errNick: 'Type your nickname first.', errCodeLen: 'The code has 4 characters.',
+      errNoGame: 'No game with this code.', errStarted: 'This game has already started.',
+      errFull: 'This game is full (3 players).', errNet: "Can't connect. Check your internet and try again.",
+      errSetup: 'The game server is not ready ({c}).',
+      waitTurn: 'Wait for your turn', yourTurn: 'Your turn!', yourTurnHint: 'Your turn to play!', turnWait: "{n}'s turn…",
+      moveFailed: 'Move not sent', gameClosed: 'Game closed', waitRematch: 'The host can start a rematch.',
+      chat: 'Chat', chatTitle: 'Chat', close: 'Close', chatPh: 'Type a message…', send: 'Send',
+      chatEmpty: "Players' messages show up here.", offline: 'No connection', msgFailed: 'Message not sent',
+      taunts: ['Too slow!', 'Wouyaye!', 'Easy now!', "You're done for!", "I'm too good!", 'Nice move!']
     }
   };
   let LANG = store.get('waxiLang') || ((navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en');
@@ -327,6 +443,8 @@ const ADS = {
     document.documentElement.lang = LANG;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t('player', { n: el.dataset.i18nPh }); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    const lg = document.getElementById('log'); if (lg) lg.dataset.empty = t('chatEmpty');
     const fr = document.getElementById('lgFR'), en = document.getElementById('lgEN');
     if (fr) { fr.setAttribute('aria-pressed', LANG === 'fr'); en.setAttribute('aria-pressed', LANG === 'en'); }
   }
@@ -492,6 +610,14 @@ const ADS = {
     return g;
   }
   const isMulti = () => G && G.players.length > 1;
+  let mode = 'solo';             // solo | local | remote
+  const multiView = () => isMulti() || mode === 'remote';
+  let myId = null;
+  const myTurn = () => {
+    if (!G || G.status !== 'play') return false;
+    if (mode !== 'remote') return true;
+    return !!G.players[G.cur] && G.players[G.cur].id === myId;
+  };
   const nameOf = i => (G.players[i] && G.players[i].nom) || t('player', { n: i + 1 });
 
   function apply(g0, i, r, c) {
@@ -536,7 +662,7 @@ const ADS = {
   }
   function render() {
     drawBoard();
-    const multi = isMulti();
+    const multi = multiView();
     $('soloScores').hidden = multi;
     $('pbar').hidden = !multi;
     if (!multi) {
@@ -549,6 +675,7 @@ const ADS = {
         d.className = 'pchip' + (i === G.cur && G.status === 'play' ? ' on' : '');
         d.style.setProperty('--c', PCOL[i]);
         const n = document.createElement('span'); n.className = 'n'; n.textContent = nameOf(i);
+        if (mode === 'remote' && p.id === myId) { const sm = document.createElement('small'); sm.textContent = ' (' + t('youTag') + ')'; n.appendChild(sm); }
         const b = document.createElement('b'); b.textContent = G.scores[i]; b.style.color = PCOL[i];
         d.append(n, b); pb.appendChild(d);
       });
@@ -570,10 +697,17 @@ const ADS = {
       slot.appendChild(m);
     });
     renderPowers();
+    trayEl.classList.toggle('locked', mode === 'remote' && !myTurn());
     const h = $('hint'); h.classList.remove('turn');
     if (!multi) h.textContent = t('hintSolo');
     else if (G.status !== 'play') h.textContent = '';
+    else if (mode === 'remote') {
+      if (myTurn()) { h.textContent = t('yourTurnHint'); h.classList.add('turn'); }
+      else h.textContent = t('turnWait', { n: nameOf(G.cur) });
+    }
     else { h.textContent = t('turnOf', { n: nameOf(G.cur) }); h.classList.add('turn'); }
+    $('footrow').hidden = mode !== 'remote';
+    if (mode !== 'remote' && !$('sheet').hidden) closeSheet();
   }
   function animateLast() {
     const L = G.last;
@@ -594,20 +728,25 @@ const ADS = {
     return true;
   }
   function onState(g) {
+    const prevCur = G ? G.cur : -1;
     G = g;
+    if (mode === 'remote' && G.status === 'lobby') { render(); showLobby(); return; }
+    if (mode === 'remote' && G.status === 'play' && (!$('lobby').hidden || !$('overMulti').hidden || !$('remoteSet').hidden)) hidePanels();
     render();
     const moved = animateLast();
+    if (mode === 'remote' && G.status === 'play' && myTurn() && (moved || prevCur !== G.cur) && isMulti())
+      setTimeout(() => toast(t('yourTurn')), moved ? 700 : 0);
     if (G.status === 'over') setTimeout(showOver, moved ? 700 : 0);
   }
 
   // ---------- écrans
-  const PANELS = ['home', 'localSet', 'overSolo', 'overMulti', 'ad'];
+  const PANELS = ['home', 'localSet', 'remoteSet', 'lobby', 'overSolo', 'overMulti', 'ad'];
   function show(id) { PANELS.forEach(p => $(p).hidden = p !== id); }
   const hidePanels = () => show(null);
 
   function showOver() {
     if (!G || G.status !== 'over') return;
-    if (!isMulti()) {
+    if (!multiView()) {
       const s = G.scores[0];
       if (s > best && s > 0) { SFX.record(); toast(t('newRecord')); } else SFX.over();
       if (s > best) { best = s; store.set('blocWaxBest', best); }
@@ -629,6 +768,9 @@ const ADS = {
       const b = document.createElement('b'); b.textContent = G.scores[i];
       li.append(n, b); ul.appendChild(li);
     });
+    const host = mode !== 'remote' || G.hostId === myId;
+    $('bRematch').hidden = !host;
+    $('mwait').hidden = host;
     SFX.record();
     show('overMulti');
   }
@@ -637,7 +779,7 @@ const ADS = {
   const POWER_MAX = 3;
   let powers = { undo: POWER_MAX, swap: POWER_MAX }, prevG = null;
   function renderPowers() {
-    const solo = G && !isMulti() && G.status === 'play';
+    const solo = G && !multiView() && G.status === 'play';
     $('powers').hidden = !solo;
     if (!solo) return;
     $('cUndo').textContent = powers.undo; $('cSwap').textContent = powers.swap;
@@ -645,7 +787,7 @@ const ADS = {
     $('pSwap').disabled = powers.swap <= 0;
   }
   function usePower(kind, action) {
-    if (!G || isMulti() || G.status !== 'play') return;
+    if (!G || multiView() || G.status !== 'play') return;
     if (powers[kind] <= 0) { toast(t('noMore')); return; }
     showRewarded(() => {
       hidePanels();
@@ -656,6 +798,7 @@ const ADS = {
   }
 
   function startSolo() {
+    leaveRemote(); mode = 'solo';
     seenSeq = 0;
     powers = { undo: POWER_MAX, swap: POWER_MAX }; prevG = null;
     onState(newState([{ nom: t('you') }]));
@@ -668,6 +811,7 @@ const ADS = {
     $('n3').hidden = n < 3;
   }
   function startLocal() {
+    leaveRemote(); mode = 'local';
     const players = [];
     for (let k = 1; k <= localCount; k++) {
       const nom = $('n' + k).value.trim() || t('player', { n: k });
@@ -688,6 +832,7 @@ const ADS = {
   }
   trayEl.addEventListener('pointerdown', e => {
     if (!G || G.status !== 'play') return;
+    if (!myTurn()) { toast(t('waitTurn')); return; }
     const slot = e.target.closest('.slot'); if (!slot) return;
     const i = +slot.dataset.i, p = G.tray[i]; if (!p) return;
     e.preventDefault();
@@ -724,7 +869,11 @@ const ADS = {
     if (!drag) return;
     const d = drag; drag = null;
     d.gh.remove(); d.slot.style.visibility = ''; clearPreview();
-    if (d.target && G.status === 'play' && G.tray[d.i] === d.p) { prevG = isMulti() ? null : JSON.parse(JSON.stringify(G)); onState(apply(G, d.i, d.target[0], d.target[1])); }
+    if (d.target && G.status === 'play' && G.tray[d.i] === d.p && myTurn()) {
+      const ng = apply(G, d.i, d.target[0], d.target[1]);
+      if (mode === 'remote') remoteCommit(G, ng);
+      else { prevG = isMulti() ? null : JSON.parse(JSON.stringify(G)); onState(ng); }
+    }
     else SFX.back();
   };
   window.addEventListener('pointerup', endDrag);
@@ -740,7 +889,7 @@ const ADS = {
   $('seg3').addEventListener('click', () => setCount(3));
   $('bLocalGo').addEventListener('click', startLocal);
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('home')));
-  document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => { maybeInterstitial(); show('home'); }));
+  document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => { maybeInterstitial(); if (mode === 'remote') goHome(); else show('home'); }));
   $('menuBtn').addEventListener('click', () => show('home'));
   const sndBtn = $('sndBtn');
   const showSnd = () => { sndBtn.textContent = SFX.isOn() ? '🔊' : '🔇'; sndBtn.setAttribute('aria-label', SFX.isOn() ? t('soundOff') : t('soundOn')); };
@@ -751,6 +900,7 @@ const ADS = {
   $('bAgain').addEventListener('click', () => { maybeInterstitial(); startSolo(); });
   $('bRematch').addEventListener('click', () => {
     maybeInterstitial();
+    if (mode === 'remote') { startRemoteRound(); return; }
     seenSeq = 0;
     onState(newState(G.players));
     hidePanels();
@@ -807,8 +957,241 @@ const ADS = {
       toast(t('doubled'));
     });
   });
+  // ================= JEU À DISTANCE (Firebase) =================
+  let fbReady = null, db = null, gameRef = null, chatQuery = null, stateCb = null, chatCb = null;
+  let unread = 0, chatLoaded = false;
+  function rerr(msg) { const e = $('rerr'); e.textContent = msg || ''; e.hidden = !msg; }
+  const pseudo = () => $('pseudo').value.trim().slice(0, 14);
+  function initFb() {
+    if (fbReady) return fbReady;
+    fbReady = new Promise((resolve, reject) => {
+      if (!window.firebase) { reject({ code: 'sdk' }); return; }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+        db = firebase.database();
+        const auth = firebase.auth();
+        const timer = setTimeout(() => reject({ code: 'timeout' }), 15000);
+        const done = u => { clearTimeout(timer); myId = u.uid; resolve(u.uid); };
+        const un = auth.onAuthStateChanged(u => {
+          if (u) { un(); done(u); }
+          else auth.signInAnonymously().catch(e => { clearTimeout(timer); un(); reject(e); });
+        });
+      } catch (e) { reject(e); }
+    });
+    fbReady.catch(() => { fbReady = null; });
+    return fbReady;
+  }
+  function fbErr(e) {
+    const c = (e && e.code) || 'erreur';
+    if (c === 'auth/network-request-failed' || c === 'timeout' || c === 'unavailable') return t('errNet');
+    if (c === 'auth/operation-not-allowed' || c === 'auth/admin-restricted-operation' || /permission/i.test(c) || /permission/i.test((e && e.message) || ''))
+      return t('errSetup', { c: c.replace('auth/', '') });
+    return t('errNet') + ' (' + c + ')';
+  }
+  const CODECH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const newCode = () => Array.from({ length: 4 }, () => CODECH[Math.floor(Math.random() * CODECH.length)]).join('');
+
+  async function createGame() {
+    const nom = pseudo(); if (!nom) { rerr(t('errNick')); $('pseudo').focus(); return; }
+    store.set('waxiNom', nom);
+    rerr(t('connecting'));
+    try {
+      const uid = await initFb();
+      for (let k = 0; k < 6; k++) {
+        const code = newCode();
+        const ref = db.ref('games/' + code);
+        const lobbyState = { code, status: 'lobby', hostId: uid, players: [{ id: uid, nom }], scores: [0], board: [], tray: [], cur: 0, seq: 0, last: null, streak: 0 };
+        const res = await ref.child('s').transaction(cur => (cur === null ? JSON.stringify(lobbyState) : undefined));
+        if (res.committed) {
+          ref.child('ts').set(firebase.database.ServerValue.TIMESTAMP).catch(() => {});
+          rerr('');
+          enterRemote(code);
+          return;
+        }
+      }
+      rerr(t('errNet'));
+    } catch (e) { rerr(fbErr(e)); }
+  }
+
+  async function joinGame() {
+    const nom = pseudo(); if (!nom) { rerr(t('errNick')); $('pseudo').focus(); return; }
+    const code = $('codeIn').value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) { rerr(t('errCodeLen')); return; }
+    store.set('waxiNom', nom);
+    rerr(t('connecting'));
+    try {
+      const uid = await initFb();
+      const sRef = db.ref('games/' + code + '/s');
+      const first = await sRef.once('value');
+      if (!first.exists()) { rerr(t('errNoGame')); return; }
+      const res = await sRef.transaction(cur => {
+        if (cur === null) return null;
+        const g = JSON.parse(cur);
+        if (g.players.some(p => p.id === uid)) return;          // déjà dedans
+        if (g.status !== 'lobby' || g.players.length >= 3) return;
+        g.players.push({ id: uid, nom }); g.scores.push(0);
+        return JSON.stringify(g);
+      });
+      const v = res.snapshot.val();
+      if (!v) { rerr(t('errNoGame')); return; }
+      const g = JSON.parse(v);
+      if (g.players.some(p => p.id === uid)) { rerr(''); enterRemote(code); return; }
+      rerr(g.status !== 'lobby' ? t('errStarted') : t('errFull'));
+    } catch (e) { rerr(fbErr(e)); }
+  }
+
+  function enterRemote(code) {
+    leaveRemote();
+    mode = 'remote';
+    gameRef = db.ref('games/' + code);
+    let firstSnap = true;
+    G = null;
+    stateCb = gameRef.child('s').on('value', snap => {
+      const v = snap.val();
+      if (!v) { toast(t('gameClosed')); goHome(); return; }
+      let g; try { g = JSON.parse(v); } catch (e) { return; }
+      if (firstSnap) { seenSeq = g.last ? g.last.seq : 0; firstSnap = false; }
+      if (G && g.seq < G.seq) return;
+      onState(g);
+    }, () => { toast(t('offline')); });
+    // discussion
+    $('log').innerHTML = ''; unread = 0; showBadge(); chatLoaded = false;
+    chatQuery = gameRef.child('chat').limitToLast(30);
+    chatCb = chatQuery.on('child_added', snap => {
+      const m = snap.val() || {};
+      const i = G ? G.players.findIndex(p => p.id === m.by) : -1;
+      const nom = i >= 0 ? G.players[i].nom : (String(m.nom || '').slice(0, 14) || '?');
+      const mine = m.by === myId;
+      let text = '';
+      if (typeof m.k === 'number') { const tq = t('taunts'); text = tq[m.k] || ''; }
+      else text = String(m.t || '').slice(0, 120);
+      if (!text) return;
+      addMsg(nom, text, i >= 0 ? PCOL[i] : 'var(--muted)', mine, chatLoaded);
+    });
+    chatQuery.once('value', () => { chatLoaded = true; });
+  }
+
+  function leaveRemote() {
+    if (gameRef && stateCb) gameRef.child('s').off('value', stateCb);
+    if (chatQuery && chatCb) chatQuery.off('child_added', chatCb);
+    gameRef = null; stateCb = null; chatQuery = null; chatCb = null;
+    if (!$('sheet').hidden) closeSheet();
+  }
+
+  function goHome() { leaveRemote(); mode = 'solo'; G = newState([{ nom: t('you') }]); seenSeq = 0; render(); show('home'); }
+
+  function remoteCommit(prev, next) {
+    if (!gameRef) return;
+    onState(next);
+    gameRef.child('s').transaction(cur => {
+      if (cur === null) return null;
+      const c = JSON.parse(cur);
+      if (c.seq !== prev.seq) return;   // quelqu'un a joué entre-temps
+      return JSON.stringify(next);
+    }).then(res => {
+      if (!res.committed) {
+        toast(t('moveFailed'));
+        const v = res.snapshot.val(); if (v) { G = null; onState(JSON.parse(v)); }
+      }
+    }).catch(() => toast(t('moveFailed')));
+  }
+
+  function showLobby() {
+    show('lobby');
+    $('lcode').textContent = G.code;
+    const ul = $('lplayers'); ul.innerHTML = '';
+    G.players.forEach((p, i) => {
+      const li = document.createElement('li');
+      const n = document.createElement('span'); n.textContent = p.nom; n.style.color = PCOL[i];
+      const tg = document.createElement('span'); tg.className = 'tag';
+      tg.textContent = [p.id === G.hostId ? t('host') : '', p.id === myId ? t('youTag') : ''].filter(Boolean).join(' · ');
+      li.append(n, tg); ul.appendChild(li);
+    });
+    const host = G.hostId === myId;
+    $('bStart').hidden = !host;
+    $('bStart').textContent = G.players.length < 2 ? t('startAlone') : t('start');
+    const h = G.players.find(p => p.id === G.hostId);
+    $('lwait').textContent = host ? (G.players.length < 2 ? t('hostHelp1') : t('hostHelp2')) : t('waitHost', { n: h ? h.nom : '…' });
+  }
+
+  function startRemoteRound() {
+    if (!G || G.hostId !== myId || !gameRef) return;
+    const g = Object.assign(newState(G.players.map(p => ({ id: p.id, nom: p.nom }))), {
+      code: G.code, hostId: G.hostId, seq: (G.seq || 0) + 1, last: null
+    });
+    g.cur = Math.floor(Math.random() * g.players.length);
+    remoteCommit(G, g);
+  }
+
+  // discussion
+  function addMsg(nom, text, color, mine, live) {
+    const log = $('log');
+    const line = document.createElement('div');
+    const b = document.createElement('b'); b.textContent = (mine ? t('you') : nom) + ' : '; b.style.color = color;
+    line.append(b, document.createTextNode(text));
+    log.appendChild(line);
+    while (log.children.length > 40) log.firstChild.remove();
+    log.scrollTop = log.scrollHeight;
+    if (live && !mine) {
+      bubble(nom + ' : ' + text);
+      SFX.tap();
+      if ($('sheet').hidden) { unread++; showBadge(); }
+    }
+  }
+  function bubble(text) {
+    wrap.querySelectorAll('.bubble').forEach(b => b.remove());
+    const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+    wrap.appendChild(b); setTimeout(() => b.remove(), 2400);
+  }
+  function showBadge() { const b = $('badge'); b.textContent = unread > 9 ? '9+' : unread; b.hidden = unread === 0; }
+  function openSheet() { $('sheet').hidden = false; unread = 0; showBadge(); const log = $('log'); log.scrollTop = log.scrollHeight; $('chatIn').focus(); }
+  function closeSheet() { $('chatIn').blur(); $('sheet').hidden = true; window.scrollTo(0, 0); }
+  function sendMsg(data) {
+    if (!gameRef || !myId) return;
+    gameRef.child('chat').push(Object.assign({ by: myId, nom: pseudo() || '?', ts: firebase.database.ServerValue.TIMESTAMP }, data))
+      .catch(() => toast(t('msgFailed')));
+  }
+  function buildTaunts() {
+    const r = $('reacts'); r.innerHTML = '';
+    t('taunts').forEach((txt, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = txt;
+      b.addEventListener('click', () => sendMsg({ k }));
+      r.appendChild(b);
+    });
+  }
+  $('chatBtn').addEventListener('click', openSheet);
+  $('sheetClose').addEventListener('click', closeSheet);
+  $('chatForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const inp = $('chatIn'); const text = inp.value.trim().slice(0, 120);
+    if (!text) return;
+    sendMsg({ t: text }); inp.value = '';
+  });
+  window.addEventListener('scroll', () => { if ($('sheet').hidden && document.activeElement.tagName !== 'INPUT') window.scrollTo(0, 0); });
+
+  $('bRemote').addEventListener('click', () => {
+    rerr('');
+    $('pseudo').value = $('pseudo').value || store.get('waxiNom') || '';
+    show('remoteSet');
+    initFb().catch(() => {});   // se connecte en avance
+  });
+  $('bCreate').addEventListener('click', createGame);
+  $('bJoin').addEventListener('click', joinGame);
+  $('codeIn').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  $('bStart').addEventListener('click', startRemoteRound);
+  $('bQuitLobby').addEventListener('click', goHome);
+  $('bWa').addEventListener('click', () => {
+    const msg = t('inviteMsg', { c: G.code });
+    window.location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  });
+  $('bCopy').addEventListener('click', () => {
+    const msg = t('inviteMsg', { c: G.code });
+    const done = () => { $('bCopy').textContent = t('copied'); setTimeout(() => { $('bCopy').textContent = t('copyCode'); }, 1500); };
+    try { navigator.clipboard.writeText(msg).then(done, () => {}); } catch (e) {}
+  });
+
   // langue
-  function setLang(l) { LANG = l; store.set('waxiLang', l); applyLang(); if (G) render(); showSnd(); }
+  function setLang(l) { LANG = l; store.set('waxiLang', l); applyLang(); buildTaunts(); if (G) render(); showSnd(); }
   $('lgFR').addEventListener('click', () => setLang('fr'));
   $('lgEN').addEventListener('click', () => setLang('en'));
 
@@ -824,6 +1207,7 @@ const ADS = {
   window.addEventListener('resize', fitLayout);
 
   applyLang();
+  buildTaunts();
   G = newState([{ nom: t('you') }]);
   render();
 })();
