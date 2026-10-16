@@ -105,6 +105,14 @@ header { display: flex; justify-content: space-between; align-items: center; gap
   animation: rise 1.2s ease-out forwards;
 }
 @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -110%) scale(1); } }
+.powers { display: flex; gap: 8px; flex: 0 0 auto; }
+.pw { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--body); font-weight: 800; font-size: 14px; color: var(--craie); background: var(--indigo); border: 2px solid var(--line); border-radius: 12px; padding: 7px 8px; white-space: nowrap; }
+.pw .play { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #1f9d55; color: var(--craie); font-size: 10px; flex: 0 0 auto; }
+.pw small { color: var(--or); font-family: var(--display); font-size: 13px; }
+.pw:disabled { opacity: .4; }
+.pw:active:not(:disabled) { background: var(--slot); }
+.lang { margin-top: 2px; }
+.lang button { font-size: 15px; padding: 6px; }
 .hint { text-align: center; font-size: 14px; color: var(--muted); margin: 0; min-height: 1.3em; flex: 0 0 auto; }
 .hint.turn { color: var(--or); font-weight: 800; font-size: 16px; }
 
@@ -159,11 +167,11 @@ header { display: flex; justify-content: space-between; align-items: center; gap
     <div class="logo">Wa<span>xi</span></div>
     <div class="right">
       <div class="scores" id="soloScores">
-        <div class="chip"><span>Score</span><b id="score">0</b></div>
-        <div class="chip best"><span>Record</span><b id="best">0</b></div>
+        <div class="chip"><span data-i18n="score">Score</span><b id="score">0</b></div>
+        <div class="chip best"><span data-i18n="record">Record</span><b id="best">0</b></div>
       </div>
       <button class="menuBtn" id="sndBtn" type="button" aria-label="Couper le son">🔊</button>
-      <button class="menuBtn" id="menuBtn" type="button">Menu</button>
+      <button class="menuBtn" id="menuBtn" type="button" data-i18n="menu">Menu</button>
     </div>
   </header>
   <div class="pbar" id="pbar" hidden></div>
@@ -171,63 +179,72 @@ header { display: flex; justify-content: space-between; align-items: center; gap
   <div class="tray" id="tray">
     <div class="slot" data-i="0"></div><div class="slot" data-i="1"></div><div class="slot" data-i="2"></div>
   </div>
+  <div class="powers" id="powers" hidden>
+    <button class="pw" id="pUndo" type="button"><span class="play">▶</span><span data-i18n="undo">Annuler</span><small id="cUndo">3</small></button>
+    <button class="pw" id="pSwap" type="button"><span class="play">▶</span><span data-i18n="swap">Nouvelles pièces</span><small id="cSwap">3</small></button>
+  </div>
   <p class="hint" id="hint"></p>
 </div>
 
 <div class="panel" id="home">
   <div class="card">
     <h1>Wa<span>xi</span></h1>
-    <p>Place les pièces wax, vide les lignes et les colonnes, bats le record.</p>
-    <button class="btn" id="bSolo" type="button">Jouer seul</button>
-    <button class="btn alt" id="bLocal" type="button">À plusieurs<span class="btnsub">2 ou 3 joueurs sur ce téléphone</span></button>
-    <p class="dim">Bientôt : jouer à distance avec tes amis.</p>
+    <p data-i18n="tagline">Place les pièces wax, vide les lignes et les colonnes, bats le record.</p>
+    <button class="btn" id="bSolo" type="button" data-i18n="playSolo">Jouer seul</button>
+    <button class="btn alt" id="bLocal" type="button"><span data-i18n="playMulti">À plusieurs</span><span class="btnsub" data-i18n="multiSub">2 ou 3 joueurs sur ce téléphone</span></button>
+    <p class="dim" data-i18n="soon">Bientôt : jouer à distance avec tes amis.</p>
+    <div class="seg lang" role="group" aria-label="Langue / Language">
+      <button type="button" id="lgFR" aria-pressed="true">Français</button>
+      <button type="button" id="lgEN" aria-pressed="false">English</button>
+    </div>
   </div>
 </div>
 
 <div class="panel" id="localSet" hidden>
   <div class="card">
-    <h2>À plusieurs</h2>
-    <p class="dim">Chacun pose une pièce à son tour sur la même grille, puis passe le téléphone.</p>
-    <div class="seg" role="group" aria-label="Nombre de joueurs">
-      <button type="button" id="seg2" aria-pressed="true">2 joueurs</button>
-      <button type="button" id="seg3" aria-pressed="false">3 joueurs</button>
+    <h2 data-i18n="playMulti">À plusieurs</h2>
+    <p class="dim" data-i18n="multiHelp">Chacun pose une pièce à son tour sur la même grille, puis passe le téléphone.</p>
+    <div class="seg" role="group">
+      <button type="button" id="seg2" aria-pressed="true" data-i18n="p2">2 joueurs</button>
+      <button type="button" id="seg3" aria-pressed="false" data-i18n="p3">3 joueurs</button>
     </div>
-    <input class="field" id="n1" maxlength="14" placeholder="Joueur 1" autocomplete="off">
-    <input class="field" id="n2" maxlength="14" placeholder="Joueur 2" autocomplete="off">
-    <input class="field" id="n3" maxlength="14" placeholder="Joueur 3" autocomplete="off" hidden>
-    <button class="btn" id="bLocalGo" type="button">On joue !</button>
-    <button class="btn ghostbtn" data-back type="button">Retour</button>
+    <input class="field" id="n1" maxlength="14" placeholder="Joueur 1" data-i18n-ph="1" autocomplete="off">
+    <input class="field" id="n2" maxlength="14" placeholder="Joueur 2" data-i18n-ph="2" autocomplete="off">
+    <input class="field" id="n3" maxlength="14" placeholder="Joueur 3" data-i18n-ph="3" autocomplete="off" hidden>
+    <button class="btn" id="bLocalGo" type="button" data-i18n="letsGo">On joue !</button>
+    <button class="btn ghostbtn" data-back type="button" data-i18n="back">Retour</button>
   </div>
 </div>
 
 <div class="panel" id="overSolo" hidden>
   <div class="card">
-    <h2>Plus de place !</h2>
+    <h2 data-i18n="noRoom">Plus de place !</h2>
     <div class="stats">
-      <div><b id="os">0</b><span>Score</span></div>
-      <div><b id="ob">0</b><span>Record</span></div>
+      <div><b id="os">0</b><span data-i18n="score">Score</span></div>
+      <div><b id="ob">0</b><span data-i18n="record">Record</span></div>
     </div>
-    <button class="btn alt" id="bCont" type="button">▶ Regarder une pub<span class="btnsub">et recevoir 3 petites pièces</span></button>
-    <button class="btn" id="bAgain" type="button">Rejouer</button>
-    <button class="btn ghostbtn" data-home type="button">Menu</button>
+    <button class="btn alt" id="bDouble" type="button">▶ <span data-i18n="double">Doubler mes points</span><span class="btnsub" data-i18n="doubleSub">en regardant une pub</span></button>
+    <button class="btn alt" id="bCont" type="button">▶ <span data-i18n="cont">Continuer la partie</span><span class="btnsub" data-i18n="contSub">pub + 3 petites pièces</span></button>
+    <button class="btn" id="bAgain" type="button" data-i18n="again">Rejouer</button>
+    <button class="btn ghostbtn" data-home type="button" data-i18n="menu">Menu</button>
   </div>
 </div>
 
 <div class="panel" id="overMulti" hidden>
   <div class="card">
-    <h2 id="mtitle">Gagné !</h2>
+    <h2 id="mtitle"></h2>
     <p class="dim" id="msub"></p>
     <ul class="plist" id="mrank"></ul>
-    <button class="btn" id="bRematch" type="button">Revanche</button>
-    <button class="btn ghostbtn" data-home type="button">Menu</button>
+    <button class="btn" id="bRematch" type="button" data-i18n="rematch">Revanche</button>
+    <button class="btn ghostbtn" data-home type="button" data-i18n="menu">Menu</button>
   </div>
 </div>
 
 <div class="panel" id="ad" hidden>
   <div class="card ad">
-    <span class="tag">Publicité (démo navigateur)</span>
+    <span class="tag" data-i18n="adTag">Publicité (démo navigateur)</span>
     <div class="count" id="adc">3</div>
-    <p>Dans l'appli, une vraie pub s'affiche ici.</p>
+    <p data-i18n="adText">Dans l'appli, une vraie pub s'affiche ici.</p>
   </div>
 </div>
 
@@ -247,7 +264,6 @@ const ADS = {
 (() => {
   const N = 8, COLORS = 6;
   const PCOL = ['#ffc93c', '#3ddc84', '#ff8a3d'];
-  const CHEERS = ['C\'est doux !', 'Ça c\'est zo !', 'Tu es fort !', 'Wouyaye !', 'Propre !'];
   const $ = id => document.getElementById(id);
   const boardEl = $('board'), trayEl = $('tray'), wrap = $('wrap');
   const cells = [];
@@ -257,6 +273,63 @@ const ADS = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
+
+  // ---------- langues (français / anglais)
+  const I18N = {
+    fr: {
+      score: 'Score', record: 'Record', menu: 'Menu',
+      tagline: 'Place les pièces wax, vide les lignes et les colonnes, bats le record.',
+      playSolo: 'Jouer seul', playMulti: 'À plusieurs', multiSub: '2 ou 3 joueurs sur ce téléphone',
+      soon: 'Bientôt : jouer à distance avec tes amis.',
+      multiHelp: 'Chacun pose une pièce à son tour sur la même grille, puis passe le téléphone.',
+      p2: '2 joueurs', p3: '3 joueurs', player: 'Joueur {n}', letsGo: 'On joue !', back: 'Retour',
+      noRoom: 'Plus de place !', double: 'Doubler mes points', doubleSub: 'en regardant une pub',
+      cont: 'Continuer la partie', contSub: 'pub + 3 petites pièces', again: 'Rejouer', rematch: 'Revanche',
+      adTag: 'Publicité (démo navigateur)', adText: "Dans l'appli, une vraie pub s'affiche ici.",
+      hintSolo: 'Glisse les pièces sur la grille. Remplis une ligne ou une colonne pour la vider.',
+      turnOf: 'À {n} de jouer', go: 'À {n} !', you: 'Toi',
+      noAd: 'Pas de pub pour le moment', adStopped: 'Pub interrompue',
+      newRecord: 'Nouveau record !', tie: 'Égalité !', wins: '{n} gagne !',
+      stuck: "{n} n'avait plus de place pour poser.",
+      undo: 'Annuler', swap: 'Nouvelles pièces', nothingUndo: 'Rien à annuler',
+      noMore: 'Plus disponible pour cette partie', undone: 'Coup annulé', swapped: 'Nouvelles pièces !',
+      doubled: 'Points doublés !', soundOff: 'Couper le son', soundOn: 'Activer le son',
+      cheers: ["C'est doux !", "Ça c'est zo !", 'Tu es fort !', 'Wouyaye !', 'Propre !']
+    },
+    en: {
+      score: 'Score', record: 'Best', menu: 'Menu',
+      tagline: 'Drop the wax pieces, clear rows and columns, beat your best score.',
+      playSolo: 'Play solo', playMulti: 'Multiplayer', multiSub: '2 or 3 players on this phone',
+      soon: 'Coming soon: play online with your friends.',
+      multiHelp: 'Take turns placing one piece on the same board, then pass the phone.',
+      p2: '2 players', p3: '3 players', player: 'Player {n}', letsGo: "Let's play!", back: 'Back',
+      noRoom: 'Out of space!', double: 'Double my points', doubleSub: 'by watching an ad',
+      cont: 'Keep playing', contSub: 'ad + 3 small pieces', again: 'Play again', rematch: 'Rematch',
+      adTag: 'Ad (browser demo)', adText: 'In the app, a real ad plays here.',
+      hintSolo: 'Drag pieces onto the board. Fill a row or column to clear it.',
+      turnOf: "{n}'s turn", go: '{n}, go!', you: 'You',
+      noAd: 'No ad available right now', adStopped: 'Ad interrupted',
+      newRecord: 'New best score!', tie: "It's a tie!", wins: '{n} wins!',
+      stuck: '{n} had no room left to play.',
+      undo: 'Undo', swap: 'New pieces', nothingUndo: 'Nothing to undo',
+      noMore: 'No more for this game', undone: 'Move undone', swapped: 'New pieces!',
+      doubled: 'Points doubled!', soundOff: 'Mute sound', soundOn: 'Turn sound on',
+      cheers: ['Sweet!', 'Awesome!', 'On fire!', 'Wouyaye!', 'Clean!']
+    }
+  };
+  let LANG = store.get('waxiLang') || ((navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en');
+  const t = (k, vars) => {
+    let v = (I18N[LANG] && I18N[LANG][k]) ?? I18N.fr[k] ?? k;
+    if (vars && typeof v === 'string') for (const x in vars) v = v.replace('{' + x + '}', vars[x]);
+    return v;
+  };
+  function applyLang() {
+    document.documentElement.lang = LANG;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t('player', { n: el.dataset.i18nPh }); });
+    const fr = document.getElementById('lgFR'), en = document.getElementById('lgEN');
+    if (fr) { fr.setAttribute('aria-pressed', LANG === 'fr'); en.setAttribute('aria-pressed', LANG === 'en'); }
+  }
 
   // ---------- sons (balafon + djembé, fabriqués dans le code, sans fichier)
   const SFX = (() => {
@@ -366,12 +439,12 @@ const ADS = {
       return;
     }
     if (!rewardReady) await prepRewarded();
-    if (!rewardReady) { toast('Pas de pub pour le moment'); return; }
+    if (!rewardReady) { toast(t('noAd')); return; }
     try {
       rewardReady = false;
       await AdMob.showRewardVideoAd();
       onReward();
-    } catch (e) { toast('Pub interrompue'); }
+    } catch (e) { toast(t('adStopped')); }
     prepRewarded();
   }
   // pub entre les parties
@@ -419,7 +492,7 @@ const ADS = {
     return g;
   }
   const isMulti = () => G && G.players.length > 1;
-  const nameOf = i => (G.players[i] && G.players[i].nom) || ('Joueur ' + (i + 1));
+  const nameOf = i => (G.players[i] && G.players[i].nom) || t('player', { n: i + 1 });
 
   function apply(g0, i, r, c) {
     const g = JSON.parse(JSON.stringify(g0));
@@ -496,10 +569,11 @@ const ADS = {
       }
       slot.appendChild(m);
     });
+    renderPowers();
     const h = $('hint'); h.classList.remove('turn');
-    if (!multi) h.textContent = 'Glisse les pièces sur la grille. Remplis une ligne ou une colonne pour la vider.';
+    if (!multi) h.textContent = t('hintSolo');
     else if (G.status !== 'play') h.textContent = '';
-    else { h.textContent = 'À ' + nameOf(G.cur) + ' de jouer'; h.classList.add('turn'); }
+    else { h.textContent = t('turnOf', { n: nameOf(G.cur) }); h.classList.add('turn'); }
   }
   function animateLast() {
     const L = G.last;
@@ -514,7 +588,7 @@ const ADS = {
       setTimeout(drawBoard, 330);
     }
     const who = isMulti() ? nameOf(L.by) + ' : ' : '';
-    if (L.lines >= 2) toast(who + CHEERS[Math.floor(Math.random() * CHEERS.length)] + ' x' + L.lines);
+    if (L.lines >= 2) { const ch = t('cheers'); toast(who + ch[Math.floor(Math.random() * ch.length)] + ' x' + L.lines); }
     else if (L.lines === 1) toast(who + (L.streak > 1 ? 'Combo x' + Math.min(L.streak, 5) : '+' + L.gain));
     if (navigator.vibrate && L.lines) { try { navigator.vibrate(30); } catch (e) {} }
     return true;
@@ -535,18 +609,19 @@ const ADS = {
     if (!G || G.status !== 'over') return;
     if (!isMulti()) {
       const s = G.scores[0];
-      if (s > best && s > 0) { SFX.record(); toast('Nouveau record !'); } else SFX.over();
+      if (s > best && s > 0) { SFX.record(); toast(t('newRecord')); } else SFX.over();
       if (s > best) { best = s; store.set('blocWaxBest', best); }
       $('os').textContent = s; $('ob').textContent = best;
       $('bCont').hidden = !!G.usedAd;
+      $('bDouble').hidden = !!G.doubled || s <= 0;
       show('overSolo');
       return;
     }
     const order = G.players.map((p, i) => i).sort((a, b) => G.scores[b] - G.scores[a]);
     const top = G.scores[order[0]];
     const winners = order.filter(i => G.scores[i] === top);
-    $('mtitle').textContent = winners.length > 1 ? 'Égalité !' : nameOf(order[0]) + ' gagne !';
-    $('msub').textContent = nameOf(G.cur) + ' n\'avait plus de place pour poser.';
+    $('mtitle').textContent = winners.length > 1 ? t('tie') : t('wins', { n: nameOf(order[0]) });
+    $('msub').textContent = t('stuck', { n: nameOf(G.cur) });
     const ul = $('mrank'); ul.innerHTML = '';
     order.forEach((i, k) => {
       const li = document.createElement('li'); if (G.scores[i] === top) li.className = 'win';
@@ -558,9 +633,32 @@ const ADS = {
     show('overMulti');
   }
 
+  // ---------- pouvoirs (pubs récompensées choisies par le joueur, en solo)
+  const POWER_MAX = 3;
+  let powers = { undo: POWER_MAX, swap: POWER_MAX }, prevG = null;
+  function renderPowers() {
+    const solo = G && !isMulti() && G.status === 'play';
+    $('powers').hidden = !solo;
+    if (!solo) return;
+    $('cUndo').textContent = powers.undo; $('cSwap').textContent = powers.swap;
+    $('pUndo').disabled = powers.undo <= 0 || !prevG;
+    $('pSwap').disabled = powers.swap <= 0;
+  }
+  function usePower(kind, action) {
+    if (!G || isMulti() || G.status !== 'play') return;
+    if (powers[kind] <= 0) { toast(t('noMore')); return; }
+    showRewarded(() => {
+      hidePanels();
+      powers[kind]--;
+      SFX.reward();
+      action();
+    });
+  }
+
   function startSolo() {
     seenSeq = 0;
-    onState(newState([{ nom: 'Toi' }]));
+    powers = { undo: POWER_MAX, swap: POWER_MAX }; prevG = null;
+    onState(newState([{ nom: t('you') }]));
     hidePanels();
   }
   let localCount = 2;
@@ -572,14 +670,14 @@ const ADS = {
   function startLocal() {
     const players = [];
     for (let k = 1; k <= localCount; k++) {
-      const nom = $('n' + k).value.trim() || ('Joueur ' + k);
+      const nom = $('n' + k).value.trim() || t('player', { n: k });
       players.push({ nom });
       store.set('blocWaxN' + k, $('n' + k).value.trim());
     }
     seenSeq = 0;
     onState(newState(players));
     hidePanels();
-    toast('À ' + players[0].nom + ' !');
+    toast(t('go', { n: players[0].nom }));
   }
 
   // ---------- glisser-déposer
@@ -626,7 +724,7 @@ const ADS = {
     if (!drag) return;
     const d = drag; drag = null;
     d.gh.remove(); d.slot.style.visibility = ''; clearPreview();
-    if (d.target && G.status === 'play' && G.tray[d.i] === d.p) onState(apply(G, d.i, d.target[0], d.target[1]));
+    if (d.target && G.status === 'play' && G.tray[d.i] === d.p) { prevG = isMulti() ? null : JSON.parse(JSON.stringify(G)); onState(apply(G, d.i, d.target[0], d.target[1])); }
     else SFX.back();
   };
   window.addEventListener('pointerup', endDrag);
@@ -645,7 +743,7 @@ const ADS = {
   document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => { maybeInterstitial(); show('home'); }));
   $('menuBtn').addEventListener('click', () => show('home'));
   const sndBtn = $('sndBtn');
-  const showSnd = () => { sndBtn.textContent = SFX.isOn() ? '🔊' : '🔇'; sndBtn.setAttribute('aria-label', SFX.isOn() ? 'Couper le son' : 'Activer le son'); };
+  const showSnd = () => { sndBtn.textContent = SFX.isOn() ? '🔊' : '🔇'; sndBtn.setAttribute('aria-label', SFX.isOn() ? t('soundOff') : t('soundOn')); };
   showSnd();
   sndBtn.addEventListener('click', () => { SFX.toggle(); showSnd(); });
   // petit clic sur tous les boutons des menus
@@ -656,12 +754,13 @@ const ADS = {
     seenSeq = 0;
     onState(newState(G.players));
     hidePanels();
-    toast('À ' + nameOf(0) + ' !');
+    toast(t('go', { n: nameOf(0) }));
   });
   $('bCont').addEventListener('click', () => {
     showRewarded(() => {
       const g = JSON.parse(JSON.stringify(G));
       g.usedAd = true; g.status = 'play';
+      prevG = null;
       SFX.reward();
       g.tray = [0, 1, 2].map(() => {
         const opt = SMALL.map(mk).filter(p => anyFit(g.board, p));
@@ -671,6 +770,47 @@ const ADS = {
       hidePanels(); onState(g);
     });
   });
+
+  $('pUndo').addEventListener('click', () => {
+    if (!prevG) { toast(t('nothingUndo')); return; }
+    usePower('undo', () => {
+      const back = prevG; prevG = null;
+      back.usedAd = G.usedAd; back.doubled = G.doubled;
+      back.seq = G.seq; back.last = null;
+      seenSeq = Math.max(seenSeq, G.seq);
+      G = back; render(); toast(t('undone'));
+    });
+  });
+  $('pSwap').addEventListener('click', () => {
+    usePower('swap', () => {
+      const g = JSON.parse(JSON.stringify(G));
+      for (let k = 0; k < 12; k++) {
+        g.tray = g.tray.map(p => p ? mk(SHAPES[Math.floor(Math.random() * SHAPES.length)]) : null);
+        if (g.tray.some(p => p && anyFit(g.board, p))) break;
+      }
+      prevG = null;
+      G = g; render(); toast(t('swapped'));
+    });
+  });
+  $('bDouble').addEventListener('click', () => {
+    if (!G || G.doubled) return;
+    showRewarded(() => {
+      G.doubled = true;
+      G.scores[0] *= 2;
+      const s2 = G.scores[0];
+      if (s2 > best) { best = s2; store.set('blocWaxBest', best); }
+      SFX.record();
+      $('os').textContent = s2; $('ob').textContent = best;
+      $('bDouble').hidden = true;
+      render();
+      show('overSolo');
+      toast(t('doubled'));
+    });
+  });
+  // langue
+  function setLang(l) { LANG = l; store.set('waxiLang', l); applyLang(); if (G) render(); showSnd(); }
+  $('lgFR').addEventListener('click', () => setLang('fr'));
+  $('lgEN').addEventListener('click', () => setLang('en'));
 
   // taille fixe : seul un vrai changement de largeur (rotation) redimensionne le jeu
   let lastW = 0;
@@ -683,7 +823,8 @@ const ADS = {
   fitLayout();
   window.addEventListener('resize', fitLayout);
 
-  G = newState([{ nom: 'Toi' }]);
+  applyLang();
+  G = newState([{ nom: t('you') }]);
   render();
 })();
 </script>
